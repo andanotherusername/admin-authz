@@ -28,9 +28,7 @@ if os.path.isfile(config):
     setup()
 
 def isrunning(un):
-    print("cuid = "+str(cuid))
     if cuid != None:
-        print("here")
         print(pwd.getpwnam(un).pw_uid)
         if int(pwd.getpwnam(un).pw_uid) == int(cuid):
             return True
@@ -43,7 +41,6 @@ def start():
 @plug.route("/AuthZPlugin.AuthZReq", methods=["POST"])
 def req():
     res=json.loads(request.data)
-    print(res)
     response={"Allow":True}
     if search(r'/(exec)$', res["RequestUri"]) != None:
         dd=json.loads(base64.b64decode(res["RequestBody"]))
