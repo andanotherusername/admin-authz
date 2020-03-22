@@ -1,38 +1,36 @@
 from flask import Flask, jsonify, request
-import base64, json, os, pwd
+import base64, json
 from re import search
+import sys, os
+
+config="/etc/admin-authz/authz.conf"
 
 plug=Flask(__name__)
 
-users=[]
-port=None
-cuid=None
-config="/etc/admin-authz/authz.conf"
+def setup(config):
+    if os.path.isfile(config):
+        def _setup():
+            try:
+                with open(config, 'r') as f:
+                    for x in f.readlines():
+                        if search(r'^$| +', x)!=None:
+                            continue
+                        t=x.split('=')
+                        if len(t) > 2:
+                            print("Config file error")
+                            sys.exit(1)
+                        else:
+                            return t[1]
+            except Exception as e:
+                print("error: "+str(e))
+                ## don't need to kill the service
+        return _setup()
+    return None
 
-if os.path.isfile(config):
-    def setup():
-        try:
-            with open(config, 'r') as f:
-                for x in f.readlines():
-                    temp=x.split("=")
-                    if temp[0]=="port":
-                        global port
-                        port=temp[1]
-                    elif temp[0]=="users":
-                        for xx in temp[1].split():
-                            global users
-                            users.append(xx)
-        except Exception as e:
-            print("error occurred: " + str(e))
-            ## this isn't serious enough (for now) to kill the service
-    setup()
-
-def isrunning(un):
-    if cuid != None:
-        print(pwd.getpwnam(un).pw_uid)
-        if int(pwd.getpwnam(un).pw_uid) == int(cuid):
-            return True
-    return False
+def debug(c):
+    if len(sys.argv)>1:
+        if sys.argv[1]=="-d":
+            print(c)
 
 @plug.route("/Plugin.Activate", methods=["POST"])
 def start():
@@ -41,11 +39,13 @@ def start():
 @plug.route("/AuthZPlugin.AuthZReq", methods=["POST"])
 def req():
     res=json.loads(request.data)
+    debug(res)
     response={"Allow":True}
     if search(r'/(exec)$', res["RequestUri"]) != None:
         dd=json.loads(base64.b64decode(res["RequestBody"]))
+        debug(dd)
         if search(r'^$|(root)|0', dd["User"])!=None:
-            response={"Allow":False, "Err":"You are not authorized to use this command"}
+            response={"Allow":False, "Msg":"You are not authorized to use this command"}
     return jsonify(**response)
 
 @plug.route("/AuthZPlugin.AuthZRes", methods=["POST"])
@@ -53,8 +53,13 @@ def res():
     response={"Allow":True}
     return jsonify(**response)
 
-try:
-    plug.run(port=int(port if port != None else "5000"))
-except Exception as e:
-    print("Error occcurred " + str(e))
-    print("port num: " + port)
+def main():
+    port=setup(config)
+    try:
+        plug.run(port=int(port if port != None else "5000"))
+    except Exception as e:
+        print("Error occcurred " + str(e))
+        print("port num: " + port)
+
+if __name__=="__main__":
+    main()
