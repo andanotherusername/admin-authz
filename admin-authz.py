@@ -13,10 +13,10 @@ def setup(config):
             try:
                 with open(config, 'r') as f:
                     for x in f.readlines():
-                        if search(r'^$| +', x)!=None:
+                        if search(r'^$|^ +$', x)!=None:
                             continue
                         t=x.split('=')
-                        if len(t) > 2:
+                        if len(t[1].split()) >= 2:
                             print("Config file error")
                             sys.exit(1)
                         else:
