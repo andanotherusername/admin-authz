@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 import base64, json
-from re import search
+from re import search, match
 import sys, os
 
 config="/etc/admin-authz/authz.conf"
@@ -36,7 +36,7 @@ def req():
     if search(r'/(exec)$', res["RequestUri"]) != None:
         dd=json.loads(base64.b64decode(res["RequestBody"]))
         debug(dd)
-        if search(r'^$|(root)|0', dd["User"])!=None:
+        if match(r'^$|(root)|0', dd["User"])!=None:
             response={"Allow":False, "Msg":"You are not authorized to use this command"}
     return jsonify(**response)
 
