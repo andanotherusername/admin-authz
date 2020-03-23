@@ -8,21 +8,15 @@ config="/etc/admin-authz/authz.conf"
 plug=Flask(__name__)
 
 def setup(config):
-    if os.path.isfile(config):
-        try:
-            with open(config, 'r') as f:
-                for x in f.readlines():
-                    if search(r'^$|^ +$', x)!=None:
-                        continue
-                    t=x.split('=')
-                    if len(t[1].split()) >= 2:
-                        print("Config file error")
-                        sys.exit(1)
-                    else:
-                        return t[1]
-        except Exception as e:
-            print("error: "+str(e))
-            ## don't need to kill the service
+    try:
+        with open(config, 'r') as f:
+            for x in f.readlines():
+                if search(r'^$|^ +$', x)!=None:
+                    continue
+                return x.split('=')[1]
+    except Exception as e:
+        print("error: "+str(e))
+        ## don't need to kill the service
     return None
 
 def debug(c):
