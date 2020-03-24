@@ -56,14 +56,14 @@ msg GREEN "Directory creation succeessful"
 for i in ${config##/*/} ${plugin##/*/} ${prog##/*/} ${service##/*/}; do
     [[ -f $i ]] && ifile=$i || {
         msg BLUE "Downloading $i"
-        wget https://raw.githubusercontent.com/andanotherusername/admin-authz/master/$i -qO /tmp/$i || error "File download failed"
-        ifile="/tmp/$i"
+        wget https://raw.githubusercontent.com/andanotherusername/admin-authz/master/$i -qO $tfile || error "File download failed"
+        ifile=$tfile
     }
     case ${i##*.} in
-        "conf") sudo install -oroot -groot -m700 $ifile  -t ${config%\/*} ;;
-        "spec") sudo install -oroot -groot -m700 $ifile -t ${plugin%\/*} ;;
-          "py") sudo install -oroot -groot -m700 $ifile -t ${prog%\/*} ;;
-     "service") sudo install -oroot -groot -m700 $ifile -t ${service%\/*} ;;
+        "conf") sudo install -oroot -groot -m700 $ifile $config ;;
+        "spec") sudo install -oroot -groot -m700 $ifile $plugin ;;
+          "py") sudo install -oroot -groot -m700 $ifile $prog ;;
+     "service") sudo install -oroot -groot -m700 $ifile $service ;;
     esac
 done
 
