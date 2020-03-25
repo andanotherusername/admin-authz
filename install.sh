@@ -23,7 +23,7 @@ setperms(){
 }
 
 error(){
-    echo -e "${RED}-->> $*${END}" 1>&2
+    echo -e "${RED}-->> $1${END}" 1>&2
     exit ${2:-1}
 }
 
@@ -69,14 +69,12 @@ preinstall(){
 }
 
 [[ $UID -eq 0 ]] && error "don't use sudo" -1
-[[ $# -gt 1 ]] && error "usage: ./install.sh <--ubuntu/--non-ubuntu>" -1
-case $1 in
-    "--ubuntu") DD=1 ;;
-    "--non-ubuntu") DD=0 ;;
-    *)  error "usage: ./install.sh <--ubuntu/--non-ubuntu>" ;;
-esac
 
-(( $DD )) && preinstall
+command -v systemctl &>/dev/null || error "Systemd init not detected. This script won't work. Read the doc" -1
+command -v apt &>/dev/null && {
+    DD=1
+    preinstall
+} || DD=0
 
 msg BLUE "Creating necessary directories"
 for i in /etc/{admin-authz,docker/plugins}; do
