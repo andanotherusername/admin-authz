@@ -114,14 +114,16 @@ sudo systemctl daemon-reload
 daemon -a "enable --now" -s admin-authz --systemd
 daemon -a start -s docker
 
-[[ -f $bappend ]] && ifile=$bappend || {
-    wget http://raw.githubusercontent.com/andanotherusername/admin-authz/master/$bappend -qO $tfile || error "error occured" $?
-    ifile=$tfile
-}
+if command -v systemctl &>/dev/null; then
+    [[ -f $bappend ]] && ifile=$bappend || {
+        wget http://raw.githubusercontent.com/andanotherusername/admin-authz/master/$bappend -qO $tfile || error "error occured" $?
+        ifile=$tfile
+    }
 
-sed -E "s/( *)## DD.*/\1DD=$DD/" $ifile > $tfile && ifile=$tfile
+    sed -E "s/( *)## DD.*/\1DD=$DD/" $ifile > $tfile && ifile=$tfile
 
-cat $ifile >> $HOME/.bashrc
+    cat $ifile >> $HOME/.bashrc
+fi
 
 msg PURPLE "Post install processes are now finished. Restart the virtual terminal ... "
 
