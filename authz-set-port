@@ -1,27 +1,51 @@
 authz-set-port(){
-
+    ## DD
     config="/etc/admin-authz/authz.conf"
     spec="/etc/docker/plugins/admin-authz.spec"
 
-    if [[ $# -lt 1 ]]; then
+    daemon(){
+        local systemd
+        while test -n "$1"; do
+            case $1 in
+                "-a")   shift && action=$1 && shift ;;
+                "-s")   shift && service=$1 && shift ;;
+                "--systemd")    systemd=1 && shift ;;
+            esac
+        done
+        if (( $systemd )); then
+            sudo systemctl $action $service
+            return $?
+        fi
+        if (( $DD )); then
+            sudo service $service $action
+            return $?
+        else
+            sudo systemctl $action $service
+            return $?
+        fi
+    }
+
+    (( $# )) || {
         echo "Usage: authz-set-port <port number>" >&2
         return 1
-    fi
+    }
 
     if ! egrep -q '[0-9]+' <<< "$1" || [[ $1 -le 1024 ]] || [[ $1 -gt 65535 ]]; then
         echo "Port number must be an integer, in the range of 1024-65535" >&2
         return 1
     fi
 
-    if echo " $(sudo ss -tulpn | awk '/LISTEN/ {print $5}' | sed -E 's/(.+):([0-9]+$)/\2/g' | xargs) " | egrep -q " $1 "; then
+    if echo " $(sudo ss -tulpn | awk '/LISTEN/ {print $5}' | sed -E 's/(.+):([0-9]+$)/\2/g') " | egrep -q " $1 "; then
         echo -e "Can't use this port\nChoose another port" >&2
         return 1
     fi
+    echo "setting port"
     echo "port=$1" | sudo tee $config || return 1
+    echo "updating plugin details"
     echo "tcp://localhost:$1" | sudo tee $spec || return 1
     echo "restarting admin-authz daemon"
-    sudo systemctl restart admin-authz
+    daemon -s admin-authz -a restart --systemd
     echo "restarting docker daemon"
-    sudo service docker restart
+    daemon -s docker -a restart
 }
 
