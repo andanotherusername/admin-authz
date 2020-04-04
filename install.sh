@@ -15,7 +15,7 @@ config="/etc/admin-authz/authz.conf"
 plugin="/etc/docker/plugins/admin-authz.spec"
 prog="/usr/local/bin/admin-authz.py"
 service="/lib/systemd/system/admin-authz.service"
-bappend="authz-set-port"
+bappend="admin-authz.sh"
 
 setperms(){
     sudo chown -R root:root $1 && \

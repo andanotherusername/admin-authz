@@ -2,10 +2,20 @@ from flask import Flask, jsonify, request
 import base64, json
 from re import search, match
 import sys, os
+import signal
 
 config="/etc/admin-authz/authz.conf"
-
+enabled=True
 plug=Flask(__name__)
+
+def handler(signum, sig):
+    global enabled
+    if enabled:
+        enabled=False
+    else:
+        enabled=True
+
+signal.signal(signal.SIGUSR1, handler)
 
 def setup(config):
     try:
@@ -38,7 +48,10 @@ def req():
         debug(dd)
         if match(r'^$|(root)|0', dd["User"])!=None:
             response={"Allow":False, "Msg":"You are not authorized to use this command"}
+    if not enabled:
+        response={"Allow":True}
     return jsonify(**response)
+
 
 @plug.route("/AuthZPlugin.AuthZRes", methods=["POST"])
 def res():
