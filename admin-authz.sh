@@ -4,7 +4,7 @@ admin-authz(){
     spec="/etc/docker/plugins/admin-authz.spec"
 
     usage(){
-        echo "Usage: admin-authz -t/--toggle\n       admin-authz -s/--set-port <port number>" >&2
+        echo -e "Usage: admin-authz -t/--toggle\n       admin-authz -s/--set-port <port number>" >&2
     }
 
     daemon(){

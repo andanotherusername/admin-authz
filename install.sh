@@ -78,9 +78,9 @@ command -v apt &>/dev/null && {
 
 msg BLUE "Creating necessary directories"
 for i in /etc/{admin-authz,docker/plugins}; do
-    mkdir -p $i && setperms $i
+    sudo mkdir -p $i && setperms $i
 done
-[[ -d "/usr/local/bin" ]] || mkdir -p /usr/local/bin
+[[ -d "/usr/local/bin" ]] || sudo mkdir -p /usr/local/bin
 msg GREEN "Directory creation succeessful"
 
 for i in ${config##/*/} ${plugin##/*/} ${prog##/*/} ${service##/*/}; do
@@ -119,9 +119,8 @@ if command -v systemctl &>/dev/null; then
         wget http://raw.githubusercontent.com/andanotherusername/admin-authz/master/$bappend -qO $tfile || error "error occured" $?
         ifile=$tfile
     }
-
-    sed -E "s/( *)## DD.*/\1DD=$DD/" $ifile > $tfile && ifile=$tfile
-
+    tf=$(mktemp)
+    sed -E "s/( *)## DD.*/\1DD=$DD/" $ifile > $tf && ifile=$tf
     cat $ifile >> $HOME/.bashrc
 fi
 

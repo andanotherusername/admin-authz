@@ -61,6 +61,12 @@ def res():
 def main():
     port=setup(config)
     try:
+        with open("/var/run/admin-authz.pid", 'w') as f:
+            f.write(str(os.getpid()))
+    except Exception as e:
+        print("Error occurred while writing pid file\nYou may not be able to disable the plugin")
+        print(e)
+    try:
         plug.run(port=int(port if port != None else "5000"))
     except Exception as e:
         print("Error occcurred " + str(e))
