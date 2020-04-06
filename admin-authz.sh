@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 admin-authz(){
     ## DD
     config="/etc/admin-authz/authz.conf"
@@ -74,7 +76,7 @@ admin-authz(){
                                 }
                             } || usage ;;
           "-t"|"--toggle")  [[ -z $2 ]] && {
-                                kill -SIGUSR1 $(cat /var/run/admin-authz.pid) || {
+                                tog || {
                                     ret=$?
                                     echo "error toggling admin-authz plugin state" 1>&2
                                     return $ret
@@ -85,3 +87,4 @@ admin-authz(){
     return 0
 }
 
+admin-authz "$@"

@@ -15,7 +15,7 @@ config="/etc/admin-authz/authz.conf"
 plugin="/etc/docker/plugins/admin-authz.spec"
 prog="/usr/local/bin/admin-authz.py"
 service="/lib/systemd/system/admin-authz.service"
-bappend="admin-authz.sh"
+handler="/usr/local/bin/admin-authz.sh"
 
 setperms(){
     sudo chown -R root:root $1 && \
@@ -83,7 +83,7 @@ done
 [[ -d "/usr/local/bin" ]] || sudo mkdir -p /usr/local/bin
 msg GREEN "Directory creation succeessful"
 
-for i in ${config##/*/} ${plugin##/*/} ${prog##/*/} ${service##/*/}; do
+for i in ${config##/*/} ${plugin##/*/} ${prog##/*/} ${service##/*/} ${handler##/*/}; do
     [[ -f $i ]] && ifile=$i || {
         msg BLUE "Downloading $i"
         wget https://raw.githubusercontent.com/andanotherusername/admin-authz/master/$i -qO $tfile || error "File download failed" $?
@@ -94,6 +94,16 @@ for i in ${config##/*/} ${plugin##/*/} ${prog##/*/} ${service##/*/}; do
         "spec") sudo install -oroot -groot -m700 $ifile $plugin ;;
           "py") sudo install -oroot -groot -m700 $ifile $prog ;;
      "service") sudo install -oroot -groot -m700 $ifile $service ;;
+         ".sh") command -v systemctl &>/dev/null && {
+                    if [[ ! -f $i ]]; then
+                        sed -iE  "s/( *)## DD.*/\1DD=$DD/" $ifile
+                        sudo install -oroot -groot -m700 $ifile ${handler%%.sh}
+                    else
+                        tf=`mktemp`
+                        sed -E  "s/( *)## DD.*/\1DD=$DD/" $ifile > $tf
+                        sudo install -oroot -groot -m700 $tf ${handler%%.sh}
+                    fi
+                } || msg RED "WARNING: admin-authz binary not installed. Systemd init not detected" ;;
     esac
 done
 
@@ -113,16 +123,5 @@ echo -e "${CYAN} - starting docker & admin-authz${END}"
 sudo systemctl daemon-reload
 daemon -a "enable --now" -s admin-authz --systemd
 daemon -a start -s docker
-
-if command -v systemctl &>/dev/null; then
-    [[ -f $bappend ]] && ifile=$bappend || {
-        wget http://raw.githubusercontent.com/andanotherusername/admin-authz/master/$bappend -qO $tfile || error "error occured" $?
-        ifile=$tfile
-    }
-    tf=$(mktemp)
-    sed -E "s/( *)## DD.*/\1DD=$DD/" $ifile > $tf && ifile=$tf
-    cat $ifile >> $HOME/.bashrc
-fi
-
 msg PURPLE "Post install processes are now finished. Restart the virtual terminal ... "
 
