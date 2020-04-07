@@ -123,5 +123,5 @@ echo -e "${CYAN} - starting docker & admin-authz${END}"
 sudo systemctl daemon-reload
 daemon -a "enable --now" -s admin-authz --systemd
 daemon -a start -s docker
-msg PURPLE "Post install processes are now finished. Restart the virtual terminal ... "
+msg PURPLE "Post install processes are now finished."
 

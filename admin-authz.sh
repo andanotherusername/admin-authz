@@ -5,6 +5,9 @@
     exit -1
 }
 
+trap "warn \"Signal ignored. Please wait for the current process to be over. Won't take long.\"" 1 2 5 15
+trap "error \"Exiting...\"" 3
+
 END="\e[0m"
 RED="\e[31m"
 GREEN="\e[32m"
@@ -154,7 +157,7 @@ setport(){
         let ret+=$?
     fi
     msg BLUE "Updating config files"
-    sed -Ei "s~(.+:)[0-9]+$~\1$1~" $PLUGIN
+    sed -Ei "s~(.+:)[0-9]+ *$~\1$1~" $PLUGIN
     let ret+=$?
     (( $ret )) && warn "Some config file were not updated" || msg GREEN "Config files successfully updated"
     return $ret
@@ -165,7 +168,7 @@ main(){
     case $1 in
         "-s"|"--set-port")  shift
                             x(){
-                                egrep -q "[0-9]+" <<< $1
+                                egrep -q "^[0-9]+$" <<< $1
                             }
                             case $1 in
                                 "-f")   $x $2 || error "The port number must be an integer" -1
