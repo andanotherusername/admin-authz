@@ -96,11 +96,11 @@ for i in ${config##/*/} ${plugin##/*/} ${prog##/*/} ${service##/*/} ${handler##/
      "service") sudo install -oroot -groot -m700 $ifile $service ;;
          ".sh") command -v systemctl &>/dev/null && {
                     if [[ ! -f $i ]]; then
-                        sed -iE  "s/( *)## DD.*/\1DD=$DD/" $ifile
+                        sed -iE  "s/^## DD.*/DD=$DD/" $ifile
                         sudo install -oroot -groot -m700 $ifile ${handler%%.sh}
                     else
                         tf=`mktemp`
-                        sed -E  "s/( *)## DD.*/\1DD=$DD/" $ifile > $tf
+                        sed -E  "s/^## DD.*/DD=$DD/" $ifile > $tf
                         sudo install -oroot -groot -m700 $tf ${handler%%.sh}
                     fi
                 } || msg RED "WARNING: admin-authz binary not installed. Systemd init not detected" ;;

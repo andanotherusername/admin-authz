@@ -21,14 +21,19 @@ except Exception as e:
     print("error: "+str(e))
     ## don't need to kill the service
 
+def handler(signum, sig):
+    global enabled
+    enabled=(False if enabled else True)
+
+signal(SIGUSR1, handler)
+
 @plug.route("/info/<query>", methods=["GET"])
 def state(query):
     if query=="state":
-        qu=("enabled" if enabled else "not enabled")
-        return "The plugin is " + qu
+        qu=(1 if enabled else 0)
+        return str(qu)
     else:
-        return 1/0#"Unknown query\n"
-
+        return "-1"
 
 @plug.route("/Plugin.Activate", methods=["POST"])
 def start():
@@ -37,28 +42,20 @@ def start():
 @plug.route("/AuthZPlugin.AuthZReq", methods=["POST"])
 def req():
     res=json.loads(request.data)
-    debug(res)
+    print(res)
     response={"Allow":True}
     if search(r'/(exec)$', res["RequestUri"]) != None:
         dd=json.loads(base64.b64decode(res["RequestBody"]))
-        debug(dd)
         if match(r'^$|(root)|0', dd["User"])!=None:
             response={"Allow":False, "Msg":"You are not authorized to use this command"}
     if not enabled:
         response={"Allow":True}
     return jsonify(**response)
 
-
 @plug.route("/AuthZPlugin.AuthZRes", methods=["POST"])
 def res():
     response={"Allow":True}
     return jsonify(**response)
-
-def handler(signum, sig):
-    global enabled
-    enabled=(False if enabled else True)
-
-signal(SIGUSR1, handler)
 
 def main():
     global port
