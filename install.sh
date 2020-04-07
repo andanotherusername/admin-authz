@@ -11,7 +11,7 @@ PURPLE="\e[35m"
 CYAN="\e[36m"
 
 tfile=`mktemp`
-config="/etc/admin-authz/authz.conf"
+config="/etc/admin-authz/authz.json"
 plugin="/etc/docker/plugins/admin-authz.spec"
 prog="/usr/local/bin/admin-authz.py"
 service="/lib/systemd/system/admin-authz.service"
@@ -90,11 +90,11 @@ for i in ${config##/*/} ${plugin##/*/} ${prog##/*/} ${service##/*/} ${handler##/
         ifile=$tfile
     }
     case ${i##*.} in
-        "conf") sudo install -oroot -groot -m700 $ifile $config ;;
+        "json") sudo install -oroot -groot -m700 $ifile $config ;;
         "spec") sudo install -oroot -groot -m700 $ifile $plugin ;;
           "py") sudo install -oroot -groot -m700 $ifile $prog ;;
      "service") sudo install -oroot -groot -m700 $ifile $service ;;
-         ".sh") command -v systemctl &>/dev/null && {
+         "sh") command -v systemctl &>/dev/null && {
                     if [[ ! -f $i ]]; then
                         sed -iE  "s/^## DD.*/DD=$DD/" $ifile
                         sudo install -oroot -groot -m700 $ifile ${handler%%.sh}
