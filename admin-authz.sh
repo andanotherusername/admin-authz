@@ -133,13 +133,13 @@ setport(){
     fi
     local ret
     if command -v ss &>/dev/null; then
-        if [[ " $(ss -tulpn | awk '/LISTEN/ {print $5}' | sed -E 's/(.+):([0-9]+$)/\2/g') " =~ " $1 " ]]; then
+        if egrep -q " $1 " <<< " $(ss -tulpn | awk '/LISTEN/ {print $5}' | sed -E 's/(.+):([0-9]+$)/\2/g') "; then
             error "Can't use this port. Port in use"
         fi
         (( $? )) && warn "error occured on safety check"
     else
         if command -v netstat &>/dev/null; then
-            if [[ " $(netstat -tulpn | awk '/LISTEN/ {print $5}' | sed -E 's/(.+):([0-9]+$)/\2/g') " =~ " $1 " ]]; then
+            if egrep -q " $1 " <<< " $(netstat -tulpn | awk '/LISTEN/ {print $5}' | sed -E 's/(.+):([0-9]+$)/\2/g') "; then
                 error "Can't use this port. Port in use"
             fi
             (( $? )) && warn "error occured on safety check"
