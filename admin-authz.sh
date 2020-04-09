@@ -133,18 +133,18 @@ setport(){
     fi
     local ret
     if command -v ss &>/dev/null; then
-        if echo " $(ss -tulpn | awk '/LISTEN/ {print $5}' | sed -E 's/(.+):([0-9]+$)/\2/g') " | egrep -q " $1 "; then
+        if [[ " $(ss -tulpn | awk '/LISTEN/ {print $5}' | sed -E 's/(.+):([0-9]+$)/\2/g') " =~ " $1 " ]]; then
             error "Can't use this port. Port in use"
         fi
         (( $? )) && warn "error occured on safety check"
     else
         if command -v netstat &>/dev/null; then
-            if echo " $(netstat -tulpn | awk '/LISTEN/ {print $5}' | sed -E 's/(.+):([0-9]+$)/\2/g') " | egrep -q " $1 "; then
+            if [[ " $(netstat -tulpn | awk '/LISTEN/ {print $5}' | sed -E 's/(.+):([0-9]+$)/\2/g') " =~ " $1 " ]]; then
                 error "Can't use this port. Port in use"
             fi
             (( $? )) && warn "error occured on safety check"
         else
-            egrep -q " +-f +" <<< $* && EXIT=0 error "netstat or ss not found. plugin may not work properly" || error "\"netstat\" or \"ss\" not found. Aborting. Set \"-f\" flag to ignore safety check"
+            egrep -q " +-f +" <<< "$*" && EXIT=0 error "netstat or ss not found. plugin may not work properly" || error "\"netstat\" or \"ss\" not found. Aborting. Set \"-f\" flag to ignore safety check"
         fi
     fi
     if test ! -f $CONFIG; then
@@ -167,17 +167,14 @@ main(){
     egrep -q ".+(-h|--help)( *$| +)" <<< " $* " && help
     case $1 in
         "-s"|"--set-port")  shift
-                            x(){
-                                egrep -q "^[0-9]+$" <<< $1
-                            }
                             case $1 in
-                                "-f")   $x $2 || error "The port number must be an integer" -1
+                                "-f")   [[ $2 =~ ^[0-9]+$ ]] || error "The port number must be an integer" -1
                                         if setport -f $2; then
                                             daemon_reload || error "daemon reload failed"
                                         else 
                                             error "port setup failed" 
                                         fi ;;
-                                   *)   x $1 || error "The port number must be an integer" -1
+                                   *)   [[ $1 =~ ^[0-9]+$ ]] || error "The port number must be an integer" -1
                                         case $2 in
                                             "-f")   if setport -f $1; then
                                                         daemon_reload || error "daemon reload failed"
