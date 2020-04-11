@@ -19,6 +19,7 @@ CYAN="\e[36m"
 CONFIG="/etc/admin-authz/authz.json"
 PLUGIN="/etc/docker/plugins/admin-authz.spec"
 PID="/var/run/admin-authz.pid"
+DOCKER="/etc/docker/daemon.json"
 ## DD
 EXIT=1
 
@@ -50,6 +51,7 @@ Use this command to handle admin-authz plugin easily
         - Enable/disable the plugin
 -> admin-authz -s|--set-port <port number>
         - Set the port number the plugin & dockerd will be communicating through
+-> admin-authz -e|--edit (--set-editor <progname>) config|plugin|docker
 EOF
     exit 0
 }
@@ -57,13 +59,15 @@ EOF
 getport(){
     local x
     if test -f $CONFIG; then
-        x=$(cat $CONFIG 2>/dev/null | jq '.port')
+        x=$(jq '.port' $CONFIG 2>/dev/null)
         (( $? )) && {
-            warn "Config read failed. Creating a config is recommended"
+            warn "Config read failed."
             port=6000
-            return 0
+            return 1
         }
         [[ $x != "null" ]] && port=$x || port=6000
+    else
+        error "Port can't b determined. Set up a config first"
     fi
     return 0
 }
@@ -149,11 +153,12 @@ setport(){
     fi
     if test ! -f $CONFIG; then
         msg BLUE "Creating config"
-        echo "{\"port\":$1, \"debug\":false}" | jq > $CONFIG
+        echo null | jq "setpath([\"plugin\", \"port\"]; $1)" >$CONFIG
         let ret+=$?
     else
         msg BLUE "Updating config files"
-        sed -Ei "s/( *\"port\": *)[0-9]+(.*)/\1$1\2/" $CONFIG
+        local x=`mktemp`
+        jq ".plugin.port=$1" $CONFIG >$x && mv $x $CONFIG
         let ret+=$?
     fi
     msg BLUE "Updating config files"
@@ -161,6 +166,38 @@ setport(){
     let ret+=$?
     (( $ret )) && warn "Some config file were not updated" || msg GREEN "Config files successfully updated"
     return $ret
+}
+
+edit(){
+    aopt(){
+        cat<<EOF
+Available options -
+config : admin-authz.json file
+plugin : docker plugin file
+docker : docker config (add-on)
+settings :
+    admin-authz -e|--editor --set-editor "editor binary"
+EOF
+    exit -1
+    }
+    local x ed=$(jq -r '.handler.editor' $CONFIG)
+    if [[ $ed == "null" ]]; then
+        for x in vim nano emacs; do
+            command -v $x &>/dev/null && {
+                ed=$x
+                break
+            }
+        done
+    fi
+    case $1 in
+        "config")   $ed $CONFIG || error "error opening file" ;;
+        "plugin")   $ed $PLUGIN || error "error opening file" ;;
+        "docker")   $ed $DOCKER || error "error opening file" ;;
+        "--set-editor") command -v $2 &>/dev/null || error "Binary \"$2\" not found"
+                        x=`mktemp`
+                        jq ".handler.editor=\"$2\"" $CONFIG > $x && mv $x $CONFIG || error "Couldn't set editor to $2" $? ;;
+               *)   aopt ;;
+    esac
 }
 
 main(){
@@ -205,6 +242,7 @@ main(){
                             else
                                 help
                             fi ;;
+        "-e"|"--edit")  edit $2 ;;
         *)  help ;;
     esac
 }

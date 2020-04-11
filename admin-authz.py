@@ -12,7 +12,7 @@ plug.debug=False
 
 try:
     with open(config, 'r') as f:
-        for key, value in json.load(f).items():
+        for key, value in json.load(f)["plugin"].items():
             if key=="port":
                 port=value
             elif key=="debug":
@@ -41,15 +41,13 @@ def start():
 
 @plug.route("/AuthZPlugin.AuthZReq", methods=["POST"])
 def req():
-    res=json.loads(request.data)
-    print(res)
     response={"Allow":True}
-    if search(r'/(exec)$', res["RequestUri"]) != None:
-        dd=json.loads(base64.b64decode(res["RequestBody"]))
-        if match(r'^$|(root)|0', dd["User"])!=None:
-            response={"Allow":False, "Msg":"You are not authorized to use this command"}
-    if not enabled:
-        response={"Allow":True}
+    if enabled:
+        res=json.loads(request.data)
+        if search(r'/(exec)$', res["RequestUri"]) != None:
+            dd=json.loads(base64.b64decode(res["RequestBody"]))
+            if match(r'^$|(root)|0', dd["User"])!=None:
+                response={"Allow":False, "Msg":"You are not authorized to use this command"}
     return jsonify(**response)
 
 @plug.route("/AuthZPlugin.AuthZRes", methods=["POST"])

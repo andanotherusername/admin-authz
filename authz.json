@@ -1,4 +1,6 @@
 {
-    "port": 6000,
-    "debug": false
+    "plugin": {
+        "port": 6000,
+        "debug": false
+    }
 }
