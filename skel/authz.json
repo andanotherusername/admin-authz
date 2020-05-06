@@ -1,0 +1,20 @@
+{
+    "plugin": {
+        "port": 6767,
+        "socket": true,
+        "description": true,
+        "commands": [
+            {
+                "cmd": "ps",
+                "msg": "No permission"
+            },
+            {
+                "cmd": "exec",
+                "admin-msg": "You are not authorized to use this command"
+            }
+        ]
+    },
+    "handler": {
+        "editor": "vim"
+    }
+}

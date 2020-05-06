@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/docker/go-plugins-helpers/authorization"
-    _ "github.com/sirupsen/logrus"
     "admin"
 )
 

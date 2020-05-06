@@ -6,16 +6,15 @@ import (
 )
 
 func main() {
-	logrus.Info("Plugin start")
-
-	plugin, err := newPlugin()
+    logrus.Info("Plugin start")
+	plug, err := newPlugin()
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	h := authorization.NewHandler(plugin)
-    if plugin.socket {
-	    if err := h.ServeUnix("authz-plugin", 0); err != nil {
+	hl := authorization.NewHandler(plug)
+    if plug.socket {
+	    if err := hl.ServeUnix(plug.name, 0); err != nil {
 		    logrus.Fatal(err)
 	    }
     }

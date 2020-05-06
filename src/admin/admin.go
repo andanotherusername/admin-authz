@@ -38,8 +38,8 @@ type nallowed struct {
 var jd Config
 var mapd Db
 var na []nallowed
-var config string = "/mnt/data/raw_projects/authz-plugin/src/test.json"
-var db string = "/mnt/data/raw_projects/authz-plugin/src/det.yml"
+var config string = "/etc/admin-authz/authz.json"
+var db string = "/usr/share/admin-authz/api.yml"
 
 func init(){
     con, err := io.ReadFile(config)
