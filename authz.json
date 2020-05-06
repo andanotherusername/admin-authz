@@ -1,6 +1,0 @@
-{
-    "plugin": {
-        "port": 6000,
-        "debug": false
-    }
-}

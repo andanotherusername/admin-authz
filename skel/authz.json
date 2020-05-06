@@ -1,9 +1,0 @@
-{
-    "plugin": {
-        "port": 8000,
-        "debug": true
-    },
-    "handler": {
-        "editor": "vim"
-    }
-}
