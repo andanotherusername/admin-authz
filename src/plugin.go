@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/docker/go-plugins-helpers/authorization"
+	auth "github.com/docker/go-plugins-helpers/authorization"
     "admin"
 )
 
@@ -16,17 +16,14 @@ func newPlugin() (*authz, error) {
     return &authz{name: "admin-authz", port: admin.GetPort(), socket: admin.GetSockStat(), desc: admin.GetDescStat()}, nil
 }
 
-func (plug *authz) AuthZReq(req authorization.Request) authorization.Response {
-    ret, i := admin.CompURI(req.RequestURI)
-    if admin.CompMeth(req.RequestMethod) && ret {
-        if admin.GetDescStat() {
-            return authorization.Response{Allow: false, Msg: admin.GetAdminMsg(i)}
-        }
-        return authorization.Response{Allow: false, Msg: admin.GetMsg(i)}
-    }
-    return authorization.Response{Allow: true}
+func (plug *authz) AuthZReq(req auth.Request) auth.Response {
+    nallowed, dmsg, _ := admin.GetStatus(req.RequestMethod, req.RequestURI)
+	if nallowed {
+		return auth.Response{Allow: false, Msg: dmsg}
+	}
+    return auth.Response{Allow: true}
 }
 
-func (p *authz) AuthZRes(req authorization.Request) authorization.Response {
-	return authorization.Response{Allow: true}
+func (p *authz) AuthZRes(req auth.Request) auth.Response {
+	return auth.Response{Allow: true}
 }

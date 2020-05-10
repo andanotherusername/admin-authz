@@ -6,6 +6,7 @@ import (
     re "regexp"
     "github.com/sirupsen/logrus"
     "github.com/go-yaml/yaml"
+    "fmt"
 )
 
 type Config struct {
@@ -14,7 +15,8 @@ type Config struct {
         Tcp uint32 `json:"port"`
         Bl []struct {
             Cmd string `json:"cmd"`
-            Msg string `json:"msg"`
+            Allow bool `json:"allow"`
+            Dmsg string `json:"dmsg"`
             Amsg string `json:"admin-msg"`
         } `json:"commands"`
         Desc bool `json:"description"`
@@ -33,6 +35,9 @@ type nallowed struct {
     path []string
     method string
     command string
+    dmsg string
+    amsg string
+    tmpstat bool
 }
 
 var jd Config
@@ -58,15 +63,16 @@ func init(){
     if ___err != nil {
         logrus.Fatal(___err)
     }
-    for i, _ := range jd.Plug.Bl {
-        for _i, _ := range mapd.All {
-            for _, v := range mapd.All[_i].Cmd {
-                if jd.Plug.Bl[i].Cmd == v {
-                    na = append(na, nallowed{mapd.All[_i].Path, mapd.All[_i].Meth, v})
+    for _, jdata := range jd.Plug.Bl {
+        for _,  ydata := range mapd.All {
+            for _, cmds := range ydata.Cmd {
+                if jdata.Cmd == cmds {
+                    na = append(na, nallowed{ydata.Path, ydata.Meth, jdata.Cmd, jdata.Dmsg, jdata.Amsg, jdata.Allow})
                 }
             }
         }
     }
+    fmt.Printf("%+v\n", jd)
 }
 
 
@@ -82,56 +88,25 @@ func GetDescStat() bool {
     return jd.Plug.Desc
 }
 
-func CompMeth(req string) bool {
-    for i, _ := range na {
-        status, _ := re.MatchString(na[i].method, req)
-        if status {
-            logrus.Info("method matched")
-            return true
-        }
-    }
-    return false
-}
-
-func CompURI(req string) (bool, int) {
-    for i, _ := range na {
-        for _, v := range na[i].path {
-            status, _ := re.MatchString(v, req)
-            if status {
-                logrus.Info("uri matched")
-                return true, i
+func GetStatus(reqm, requ string) (bool, string, string){
+    for _, v := range na {
+        _status, _ := re.MatchString(v.method, reqm)
+        if _status {
+            for _, _v := range v.path {
+                _status, _ = re.MatchString(_v, requ)
+                if ! _status {
+                    continue
+                }
+                if ! v.tmpstat {
+                    if jd.Plug.Desc {
+                        return true, v.dmsg, v.amsg
+                    } else {
+                        return true, "", ""
+                    }
+                }
+                return false, "", ""
             }
         }
     }
-    return false, -1
-}
-
-func GetMsg(i int) string {
-    if i == -1 {
-        return ""
-    }
-    for _i, _ := range jd.Plug.Bl {
-        if jd.Plug.Bl[_i].Cmd == na[i].command {
-            if jd.Plug.Bl[_i].Msg == "" {
-                return "Permission error"
-            }
-            return jd.Plug.Bl[_i].Msg
-        }
-    }
-    return ""
-}
-
-func GetAdminMsg(i int) string {
-    if i == -1 {
-        return ""
-    }
-    for _i, _ := range jd.Plug.Bl {
-        if jd.Plug.Bl[_i].Cmd == na[i].command {
-            if jd.Plug.Bl[_i].Amsg == "" {
-                return "This command is admin restricted"
-            }
-            return jd.Plug.Bl[_i].Amsg
-        }
-    }
-    return ""
+    return false, "", ""
 }

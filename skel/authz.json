@@ -6,11 +6,13 @@
         "commands": [
             {
                 "cmd": "ps",
-                "msg": "No permission"
+                "allow": false,
+                "dmsg": "No permission",
+                "amsg": "Admin restricted"
             },
             {
                 "cmd": "exec",
-                "admin-msg": "You are not authorized to use this command"
+                "dmsg": "Not allowed"
             }
         ]
     },
