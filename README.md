@@ -1,3 +1,5 @@
 # admin-authz
-docker authz plugin for `exec` commands
-todo
+docker authz plugin for all kinds of commands
+
+
+## todo
